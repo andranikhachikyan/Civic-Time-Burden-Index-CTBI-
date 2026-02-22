@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
+import geopandas as gpd
+import matplotlib.pyplot as plt
 
 # =====================================================
 # PART 1 — GROCERY BURDEN (TRACT → COUNTY)
@@ -8,7 +10,6 @@ from sklearn.preprocessing import StandardScaler
 
 df = pd.read_csv("Food Access Research Atlas-Table 1.csv")
 
-# Preserve leading zeros
 df["CensusTract"] = df["CensusTract"].astype(str).str.zfill(11)
 df["GEOID"] = df["CensusTract"].str[:5]
 
@@ -33,19 +34,13 @@ print("Grocery rows:", len(county_grocery))
 # =====================================================
 
 commute_raw = pd.read_csv("TTW.csv")
-
-# Drop metadata row
 commute = commute_raw.iloc[1:].copy()
-
-# Extract 5-digit FIPS
 commute["GEOID"] = commute["GEO_ID"].str[-5:]
 
-# Convert numeric columns
 for col in commute.columns:
     if col.endswith("E"):
         commute[col] = pd.to_numeric(commute[col], errors="coerce")
 
-# Midpoints for commute bins
 midpoints = {
     "B08303_002E": 2.5,
     "B08303_003E": 7,
@@ -65,7 +60,6 @@ weighted_sum = sum(commute[col] * midpoint for col, midpoint in midpoints.items(
 total_workers = commute["B08303_001E"]
 
 commute["commute_min"] = weighted_sum / total_workers
-
 commute_clean = commute[["GEOID", "commute_min"]].copy()
 
 print("Commute rows:", len(commute_clean))
@@ -76,7 +70,6 @@ print("Commute rows:", len(commute_clean))
 # =====================================================
 
 merged = county_grocery.merge(commute_clean, on="GEOID", how="inner")
-
 print("After commute merge:", len(merged))
 
 
@@ -85,7 +78,6 @@ print("After commute merge:", len(merged))
 # =====================================================
 
 hospital_df = pd.read_csv("county_nearest_hospital.csv")
-
 hospital_df["GEOID"] = hospital_df["county_fips"].astype(str).str.zfill(5)
 
 hospital_clean = hospital_df[["GEOID", "nearest_hospital_minutes_est"]].copy()
@@ -102,9 +94,7 @@ print("Hospital rows:", len(hospital_clean))
 # =====================================================
 
 master = merged.merge(hospital_clean, on="GEOID", how="inner")
-
 print("Final merged rows:", len(master))
-print(master.head())
 
 
 # =====================================================
@@ -132,7 +122,41 @@ print(master["CTBI"].describe())
 
 
 # =====================================================
-# OPTIONAL — SAVE FINAL DATASET
+# PART 8 — LOAD COUNTY SHAPEFILE
 # =====================================================
 
-master.to_csv("ctbi_master_dataset.csv", index=False)
+counties = gpd.read_file("tl_2023_us_county.shp")
+counties["GEOID"] = counties["GEOID"].astype(str).str.zfill(5)
+
+map_df = counties.merge(master, on="GEOID", how="inner")
+
+print("Map rows:", len(map_df))
+
+
+# =====================================================
+# PART 9 — CLIP EXTREME VALUES FOR VISUALIZATION
+# =====================================================
+
+map_df["CTBI_vis"] = map_df["CTBI"].clip(-5, 5)
+
+
+# =====================================================
+# PART 10 — PLOT CHOROPLETH
+# =====================================================
+
+fig, ax = plt.subplots(1, 1, figsize=(15, 10))
+
+map_df.plot(
+    column="CTBI_vis",
+    cmap="RdBu_r",
+    linewidth=0.1,
+    ax=ax,
+    edgecolor="black",
+    legend=True
+)
+
+ax.set_title("Civic Time Burden Index (CTBI) by County", fontsize=16)
+ax.axis("off")
+
+plt.tight_layout()
+plt.show()
