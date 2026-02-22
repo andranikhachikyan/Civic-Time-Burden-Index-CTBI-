@@ -1,0 +1,7 @@
+
+venv/
+__pycache__/
+.DS_Store
+outputs/
+*.pyc
+Food Access Research Atlas-Table 1.csv
