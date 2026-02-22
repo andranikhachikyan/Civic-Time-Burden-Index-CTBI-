@@ -1,11 +1,3 @@
-Notes about the Food Access Research Atlas download data:,,,,,,,,,,,,
-,,,,,,,,,,,,
-This file contains multiple spreadsheets:,,,,,,,,,,,,
-,,,,,,,,,,,,
-1.  A variable lookup that provides explanatory names for all Food Access Research Atlas variables.,,,,,,,,,,,,
-2.  A table of all Food Access Research Atlas Data.,,,,,,,,,,,,
-3.  Data explanations and data sources are on the Food Access Research Atlas data and documentation download page:,,,,,,,,,,,,
-https://www.ers.usda.gov/data-products/food-access-research-atlas/download-the-data/,,,,,,,,,,,,
-,,,,,,,,,,,,
-Release history:,,,,,,,,,,,,
-Initial release: April 2021,,,,,,,,,,,,
+version https://git-lfs.github.com/spec/v1
+oid sha256:baa44046fa0c4ab4a149c9824f3ec8b3367a74cff10e305eab1e9f12cc2858d0
+size 641
